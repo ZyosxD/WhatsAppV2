@@ -9,7 +9,13 @@ const getCurrentTimestamp = () => {
         second: '2-digit',
         hour12: false,
     };
-    return new Date().toLocaleString('en-US', options);
+
+    // Using the 'sv-SE' locale gives a YYYY-MM-DD HH:MM:SS format
+    const formatter = new Intl.DateTimeFormat('sv-SE', options);
+    const denverTime = formatter.format(new Date());
+
+    // Replace the space with 'T' to match the ISO 8601 format
+    return denverTime.replace(' ', 'T');
 };
 
 module.exports = { getCurrentTimestamp };

@@ -1,0 +1,2 @@
+# Lista de IDs de grupos para envío masivo
+# Formato: id_grupo@g.us (ej. 1234567890-12345678@g.us)

@@ -11,27 +11,28 @@ const { randomDelay, simulateTyping } = require('./antiBan');
 let isRunning = false;
 let isPaused = false;
 let isStopped = false;
-let numbers = [];
+let targets = [];
 let currentIndex = 0;
 
-const start = async (client) => {
+const start = async (client, targetType) => {
     if (isRunning) {
         logger.warn('El proceso de envío masivo ya está en ejecución.');
         return;
     }
 
     try {
-        const numbersPath = path.join(__dirname, 'numbers.txt');
-        const numbersFile = fs.readFileSync(numbersPath, 'utf-8');
-        numbers = numbersFile.split('\n').filter(n => n.trim() !== '' && !n.startsWith('#'));
+        const filePath = path.join(__dirname, targetType === 'individual' ? 'numbers.txt' : 'groups.txt');
+        const fileContent = fs.readFileSync(filePath, 'utf-8');
+        targets = fileContent.split('\n').filter(line => line.trim() !== '' && !line.startsWith('#'));
+
         currentIndex = 0;
         isRunning = true;
         isPaused = false;
         isStopped = false;
 
-        logger.info(`Iniciando envío masivo a ${numbers.length} números.`);
+        logger.info(`Iniciando envío masivo a ${targets.length} ${targetType === 'individual' ? 'números' : 'grupos'}.`);
 
-        for (currentIndex = 0; currentIndex < numbers.length; currentIndex++) {
+        for (currentIndex = 0; currentIndex < targets.length; currentIndex++) {
             if (isStopped) {
                 logger.info('Envío masivo detenido por el administrador.');
                 break;
@@ -41,8 +42,8 @@ const start = async (client) => {
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
 
-            const number = numbers[currentIndex].trim();
-            const chatId = `${number}@c.us`;
+            const target = targets[currentIndex].trim();
+            const chatId = targetType === 'individual' ? `${target}@c.us` : target;
 
             try {
                 const messageBasePath = path.join(__dirname, 'messages', 'message_1.txt');
@@ -64,7 +65,7 @@ const start = async (client) => {
                 }
 
                 const logEntry = {
-                    phone: number,
+                    phone: target,
                     timestamp: getCurrentTimestamp(),
                     message_id: `msg_${Date.now()}`,
                     status: 'sent',
@@ -75,9 +76,9 @@ const start = async (client) => {
                 await sendReport(client, logEntry);
 
             } catch (error) {
-                logger.error(`Error al enviar mensaje a ${number}: ${error.message}`);
+                logger.error(`Error al enviar mensaje a ${target}: ${error.message}`);
                 const logEntry = {
-                    phone: number,
+                    phone: target,
                     timestamp: getCurrentTimestamp(),
                     message_id: `msg_${Date.now()}`,
                     status: 'failed',
@@ -87,7 +88,7 @@ const start = async (client) => {
                 recordSentMessage(logEntry);
             }
 
-            if (currentIndex < numbers.length - 1) {
+            if (currentIndex < targets.length - 1) {
                 await randomDelay();
             }
         }
@@ -125,9 +126,9 @@ const getStatus = () => {
         isRunning,
         isPaused,
         isStopped,
-        total: numbers.length,
+        total: targets.length,
         completed: currentIndex,
-        remaining: numbers.length - currentIndex,
+        remaining: targets.length - currentIndex,
     };
 };
 
