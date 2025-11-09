@@ -1,0 +1,4 @@
+# Lista de números para envío masivo
+# Formato: +códigoPaísNúmero (ej. +1234567890)
++1234567890
++5491122334455
